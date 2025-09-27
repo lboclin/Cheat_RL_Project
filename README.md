@@ -94,8 +94,8 @@ Once the setup is complete, you can run the main scripts from the root of the pr
 
 This experimental phase aimed to establish a performance baseline for a Deep Q-Network (DQN) agent in the game of "Cheat". The agent was developed with a "blind" architecture, wherein the neural network head responsible for strategic card selection was disabled. This ablation study forces the agent to learn the game's core mechanics—when to challenge, pass, or play, and what rank/quantity to announce—without the ability to choose which specific cards to use in a bluff. The agent was trained against a pool of four distinct rule-based opponents over 50,000 episodes. To analyze the impact of the exploration-exploitation trade-off, the `epsilon_decay` hyperparameter was varied across three primary training regimes. The results demonstrate that a prolonged exploration phase is critical for this problem, with the best-performing agent achieving a peak win rate of **25.8%**.
 
-![Win rate evolution of all players](results/dqn_blind_agent_run_2/win_rate_evolution.png)
-![RL Agent performance zoomed - Best Performance](results/dqn_blind_agent_run_2/rl_agent_performance_zoom.png)
+![Win rate evolution of all players](results/dqn_blind_agent/run_2/win_rate_evolution.png)
+![RL Agent performance zoomed - Best Performance](results/dqn_blind_agent/run_2/rl_agent_performance_zoom.png)
 ---
 
 ## 🗺️ Roadmap

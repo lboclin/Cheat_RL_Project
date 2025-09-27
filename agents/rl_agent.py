@@ -34,7 +34,7 @@ class RLAgent:
         """
         # --- Epsilon-Greedy Parameters ---
         self.epsilon = epsilon
-        self.epsilon_decay = 0.999985
+        self.epsilon_decay = 0.999995
         self.epsilon_min = 0.01
 
         # Mappings to translate between card ranks and network output indices.
@@ -198,6 +198,7 @@ class RLAgent:
         # For play-specific actions, use placeholders for non-'play' actions.
         announced_ranks_idx = []
         quantities_idx = []
+        played_ranks_idx = []
         for action_tuple in batch.action:
             action_type, cards, rank = action_tuple
             if action_type == 2:  # Is a 'play' action
@@ -205,9 +206,14 @@ class RLAgent:
                 announced_ranks_idx.append(self.rank_to_index.get(rank, 1) - 1)
                 # Convert quantity 1-6 to a 0-5 index for the network.
                 quantities_idx.append(len(cards) - 1 if cards else 0)
+
+                unique_ranks_idx = {self.rank_to_index[card.value] for card in cards}
+                played_ranks_idx.append(list(unique_ranks_idx))
+
             else:
                 announced_ranks_idx.append(-1)  # Placeholder
                 quantities_idx.append(-1)     # Placeholder
+                played_ranks_idx.append([])     # Placeholder
 
         announced_ranks_idx = torch.tensor(announced_ranks_idx, dtype=torch.int64).view(-1, 1)
         quantities_idx = torch.tensor(quantities_idx, dtype=torch.int64).view(-1, 1)
@@ -239,8 +245,28 @@ class RLAgent:
             predicted_q_qty = q_values_dict["quantity_claim"][play_mask].gather(1, quantities_idx[play_mask])
             total_loss += F.smooth_l1_loss(predicted_q_qty, target_q_values[play_mask].unsqueeze(1))
 
-            # Note: Loss for the 'rank_selection' head is omitted for the
-            # "blind agent" experiment, as its weights are not being trained.
+            # Loss for Rank Selection
+            # This loss is calculated only for the Q-values of the ranks that were actually played
+            predicted_q_rank_selection = q_values_dict["rank_selection"][play_mask]
+            target_q_values_for_plays = target_q_values[play_mask].unsqueeze(1)
+
+            selection_loss = torch.tensor(0.0)
+            num_valid_selections = 0
+
+            # Filter the list of played ranks to correspond to the 'play' actions in the batch.
+            played_ranks_for_this_batch = [ranks for i, ranks in enumerate(played_ranks_idx) if play_mask[i]]
+
+            for i in range(predicted_q_rank_selection.size(0)):
+                rank_indices_for_this_action = played_ranks_for_this_batch[i]
+
+                if rank_indices_for_this_action:
+                    predicted_q_for_played_ranks = predicted_q_rank_selection[i, rank_indices_for_this_action]
+                    target = target_q_values_for_plays[i].expand_as(predicted_q_for_played_ranks)
+                    selection_loss += F.smooth_l1_loss(predicted_q_for_played_ranks, target)
+                    num_valid_selections += 1
+
+            if num_valid_selections > 0:
+                total_loss += (selection_loss / num_valid_selections)
 
         # --- 6. Perform backpropagation ---
         self.optimizer.zero_grad()
