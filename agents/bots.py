@@ -220,13 +220,15 @@ def bot_strategy_one_third(player, current_rank, last_number_of_cards_played):
 
 def bot_100_0(player, current_rank, last_number_of_cards_played):
     """
-    Implements a completely honest but aggressive bot.
+    Implements a completely honest bot.
 
-    This bot **never lies**. When responding to a play, if it holds cards
-    of the required rank, it will play them. If not, it will always
-    **challenge** the previous player (action 0). When starting a round, it
-    plays its most common rank.
+    This bot **never lies** and never doubts. When it does not have truth cards, it passes.
     """
+
+    if suspect_play(player, current_rank, last_number_of_cards_played):
+        if random.randint(1, 20) != 1:
+            return (0, [], current_rank)
+
 
     if current_rank != "Open":
         true_cards = [card for card in player.hand if card.value == current_rank]
@@ -239,7 +241,7 @@ def bot_100_0(player, current_rank, last_number_of_cards_played):
         if len(true_cards) > 0:
             return (2, true_cards, current_rank)
         else:
-            return (0, [], current_rank)
+            return (1, [], current_rank)
     else:
         hand_values_no_jokers = [card.value for card in player.hand if card.value != "Joker"]
         if not hand_values_no_jokers:
@@ -368,3 +370,46 @@ def bot_strategy_60_40(player, current_rank, last_number_of_cards_played):
                 return (2, player.hand, new_announced_rank)
             else:
                 return (2, play_cards, new_announced_rank)
+            
+
+def bot_strategy_challenger(player, current_rank, last_number_of_cards_played):
+    """
+    Implements a completely honest
+
+    This bot **never lies**. But if the other player plays, it will always challenge.
+    """
+
+    if current_rank != "Open":
+        return [0, [], current_rank]
+    else:
+        hand_values_no_jokers = [card.value for card in player.hand if card.value != "Joker"]
+        if not hand_values_no_jokers:
+            most_commun_rank = "Ace"
+        else:
+            most_commun_rank = max(set(hand_values_no_jokers), key=hand_values_no_jokers.count)
+
+        card_values = ["Joker", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
+        value_to_index = {value: i for i, value in enumerate(card_values)}
+        hand_vector = [0]*14
+        for card in player.hand:
+            if card.value in value_to_index:
+                hand_vector[value_to_index[card.value]] += 1
+
+        number_of_ranks = 0
+        max_value = 0
+        for num in hand_vector:
+            if num > 0:
+                number_of_ranks += 1
+            if num > max_value:
+                max_value = num
+
+        new_announced_rank = most_commun_rank
+
+        if number_of_ranks == 1:
+            return (2, player.hand, new_announced_rank)
+        
+        play_cards = []
+        for card in player.hand:
+            if card.value == new_announced_rank:
+                play_cards.append(card)
+        return (2, play_cards, new_announced_rank)

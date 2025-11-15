@@ -34,7 +34,7 @@ class RLAgent:
         """
         # --- Epsilon-Greedy Parameters ---
         self.epsilon = epsilon
-        self.epsilon_decay = 0.999995
+        self.epsilon_decay = 0.999985
         self.epsilon_min = 0.01
 
         # Mappings to translate between card ranks and network output indices.

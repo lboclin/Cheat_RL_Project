@@ -103,7 +103,7 @@ This experimental phase aimed to establish a performance baseline for a Deep Q-N
 The current research plan is structured as follows:
 
 -   [x] Establish a performance baseline using a DQN agent with the `rank_selection` head disabled (a "blind" agent).
--   [ ] Enable and train the fourth network head (`rank_selection`) to allow for strategic bluffing.
+-   [x] Enable and train the fourth network head (`rank_selection`) to allow for strategic bluffing.
 -   [ ] Implement and train a PPO (Proximal Policy Optimization) agent.
 -   [ ] Conduct a comparative analysis of the performance between the DQN and PPO agents.
 

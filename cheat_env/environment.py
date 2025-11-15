@@ -190,28 +190,23 @@ class CheatEnviroment:
     def step(self, action: tuple):
         """
         Executes one time step in the environment based on the agent's action.
-
-        Args:
-            action: A tuple containing the action_type, cards to play, and
-                    announced rank.
-
-        Returns:
-            A tuple containing (next_state, reward, terminated, truncated, info).
         """
         action_type, cards_to_play, announced_rank = action
         acting_player_index = self.current_player_index
         
         round_ended_by_challenge = False
+        
+        # --- REWARD SHAPING ---
         reward = 0.0
         terminated = False
 
         if action_type == 0:
-            self._resolve_challenge(acting_player_index, self.last_player_who_played_index)
+            reward = self._resolve_challenge(acting_player_index, self.last_player_who_played_index)
             round_ended_by_challenge = True
         elif action_type == 1:
-            self._handle_pass(acting_player_index)
-        else:
-            self._play_cards(acting_player_index, cards_to_play, announced_rank)
+            reward = self._handle_pass(acting_player_index)
+        else: # action_type == 2
+            reward = self._play_cards(acting_player_index, cards_to_play, announced_rank)
         
         self.turn_count += 1
         terminated = self.check_game_over()
@@ -220,12 +215,11 @@ class CheatEnviroment:
         if not terminated and self.turn_count >= self.max_episode_steps:
             truncated = True
             
-        if terminated :
-            if reward == 0.0 :
-                if self.winner == self.rl_agent:
-                    reward = 1.0
-                else:
-                    reward = -1.0
+        if terminated:
+            if self.winner == self.rl_agent:
+                reward = 1.0
+            else:
+                reward = -1.0
             
         if not terminated:
             if self.pass_counter >= (len(self.players)-1):
@@ -251,10 +245,16 @@ class CheatEnviroment:
         self.current_player_index = starting_player_index
 
     def _resolve_challenge (self, current_player_index, last_player_who_played_index):
-        """Handles the logic when a player doubts the previous play."""
+        """
+        Handles the logic when a player doubts the previous play and returns an
+        intermediate reward based on the outcome for the RL agent.
+        """
         current_player = self.players[current_player_index]
         last_player_who_played = self.players[last_player_who_played_index]
         self.pass_counter = 0
+        
+        # --- REWARD SHAPING ---
+        reward = 0.0
 
         got_the_cheat = False
         for i in range(self.last_number_of_cards_played):
@@ -266,19 +266,41 @@ class CheatEnviroment:
         if got_the_cheat:
             for card in self.round_discard_pile:
                 last_player_who_played.receive_card(card)
+            
+            # --- REWARD SHAPING ---
+            if current_player == self.rl_agent: 
+                reward = 0.1
+            elif last_player_who_played == self.rl_agent:
+                reward = -0.1
+
             self._start_new_round (current_player_index)
         else:
             for card in self.round_discard_pile:
                 current_player.receive_card(card)
+
+            # --- REWARD SHAPING ---
+            if current_player == self.rl_agent: 
+                reward = -0.1
+            elif last_player_who_played == self.rl_agent: 
+                reward = 0.1
+
             self._start_new_round (last_player_who_played_index)
+        
+        return reward
 
     def _handle_pass(self, current_player_index):
         """Processes a 'pass' action for the current player."""
         current_player = self.players[current_player_index]
         self.pass_counter += 1
 
+        if current_player == self.rl_agent:
+            return -0.01
+        return 0.0
+
     def _play_cards(self, current_player_index, cards_to_play, announced_rank):
-        """Processes a 'play' action, moving cards and updating the game state."""
+        """
+        Processes a 'play' action and returns a reward if the agent wins/loses on a lie.
+        """
         current_player = self.players[current_player_index]
         self.current_rank_to_play = announced_rank
 
@@ -291,13 +313,18 @@ class CheatEnviroment:
         self.pass_counter = 0
         self.starter_player_index = None
 
+        reward = 0.0
+
+
         if (len(current_player.hand) == 0) :
-            self._last_play_judge(current_player_index, cards_to_play)
+            reward = self._last_play_judge(current_player_index, cards_to_play)
+
+        
+        return reward
 
     def _last_play_judge(self, current_player_index, cards_to_play) :
         """
-        Checks if a player's winning move was a lie. A player cannot win on a lie.
-        If the move was a lie, the player takes the pile and the game continues.
+        Checks if a winning move was a lie and returns a penalty if so.
         """
         current_player = self.players[current_player_index]
         was_a_lie = False
@@ -306,8 +333,15 @@ class CheatEnviroment:
                 was_a_lie = True
                 break
 
-        if was_a_lie : 
+        if was_a_lie :
             for card_from_pile in self.round_discard_pile:
                 current_player.receive_card(card_from_pile)
+            
             next_player = (self.current_player_index+1) % len(self.players)
             self._start_new_round(next_player)
+
+            # --- REWARD SHAPING ---
+            if current_player == self.rl_agent:
+                return -0.1
+        
+        return 0.0

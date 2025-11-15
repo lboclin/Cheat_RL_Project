@@ -1,39 +1,64 @@
-# Phase 2: Enabling Strategic Card Selection & Automation
+## Phase 3: Diagnosing Stochasticity & Proving Agent Capability
 
-**Date:** September 26, 2025
+-   **Date:** November 14, 2025
+-   **Objective:** Build upon the "vision-enabled" agent from Phase 2. The primary goals were to (1) implement reward shaping, (2) diagnose the agent's failure in the default stochastic environment, and (3) determine if the DQN agent is fundamentally capable of learning complex policies.
 
-### 1. Methodology
+### 1. Experiment: Reward Shaping (Stochastic Environment)
 
-Following the establishment of a baseline with the "blind" agent, Phase 2 focused on enabling the agent's ability to strategically select which cards to play from its hand. This involved two key changes to the project's methodology:
+-   **Objective:** Test the "Next Step" from Phase 2 by implementing a simple reward shaping mechanism to guide the agent.
+-   **Methodology:**
+    -   Reward: `+0.05` for successfully making an opponent draw cards.
+    -   Penalty: `-0.05` for drawing cards from the pile.
+    -   Environment: The default stochastic opponent pool (bots change each match, and the bots themselves are probabilistic).
+-   **Results:**
+    -   Performance was poor across 5 training runs.
+    -   Maximum win rate achieved: **~12%**.
+-   **Analysis:** The environment is excessively stochastic. The DQN algorithm (which is value-based) cannot learn a stable policy.
+-   **Key Problem:** The agent faced contradictory rewards. For the exact same state (S) and action (A), it could receive `+0.05` in one game and `-0.05` in another due to the random nature of the bots. This makes it impossible for the Q-function to converge on whether action A is "good" or "bad."
 
-* **Activation of the `rank_selection` Head:** The fourth head of the Deep Q-Network, responsible for outputting Q-values for each card rank in the agent's hand, was fully implemented and enabled. The loss function in `rl_agent.py` was updated to perform backpropagation on the Q-values corresponding to the ranks of the cards used in each "play" action.
-* **Automated Experimentation Framework:** Recognizing the significant increase in training time and the high variance between runs, an automated experimentation script, `run_experiments.py`, was developed. This script orchestrates multiple, independent training sessions by invoking `main.py` with a unique output directory for each run. This approach ensures that logs and model checkpoints from each experiment are stored separately, allowing for robust, parallelized data collection and a more accurate assessment of the agent's average performance. To accommodate this, `main.py` was refactored to accept an `--output_dir` command-line argument.
+### 2. Hypothesis & Isolation Tests
 
-### 2. Observation: High Variance and Learning Failure
+-   **Question:** Is the agent failing because (A) the environment is too complex/stochastic, or (B) the agent's code/architecture is fundamentally broken?
 
-With the new architecture in place, an initial training run over 50k episodes with a medium exploration decay (`0.999985`) yielded a promising peak win rate of **35%**, significantly outperforming the blind agent's 25.8% baseline.
+#### Test A: Isolate Bot Pool (e.g., vs. 2x 80/20 Bots)
 
-However, subsequent attempts to replicate this success under more extensive training regimes (100k episodes with a longer exploration decay of `0.999995`) resulted in catastrophic learning failure. Out of nine independent runs, seven converged to a stable win rate of 0%. The agent's policy would collapse into a suboptimal state during the prolonged exploration phase and never recover.
+-   **Objective:** Reduce environmental stochasticity by *removing* the changing bot pool.
+-   **Methodology:** The agent was trained against a *static* pool of opponents (e.g., two `bot_strategy_80_20` or two `bot_strategy_60_40`).
+-   **Result:** Failure. Performance remained poor, similar to the mixed-pool environment.
+-   **Conclusion:** The **internal stochasticity** of the bots (their probabilistic decision-making) is, by itself, still too high for the DQN to handle.
 
-This demonstrates a critical issue of high variance and poor sample efficiency. The initial success appears to have been a statistical outlier (a "golden run"), while the systematic failures indicate a fundamental problem in the learning dynamics.
+#### Test B: Deterministic Environment (vs. 2x Honest Bots)
 
-### 3. Hypothesis: The Sparse Reward Problem
+-   **Objective:** Prove that the agent's architecture *can* learn by placing it in a 100% deterministic environment.
+-   **Methodology:** Agent plays against two `honest_bot` (who only play truth and never challenge).
+-   **Expected Outcome:** If the agent is working, it should learn the simple, optimal policy: always play the maximum number of cards to win.
+-   **Result:** **Total Success.** Achieved a **98% win rate** across two training runs. The ~2% loss is attributed to the remaining `epsilon` exploration.
+-   **Conclusion:** **The agent's architecture and learning code are correct.** The DQN *works* perfectly in a deterministic environment.
 
-The introduction of the fourth network head exponentially increased the complexity of the action space and, consequently, the difficulty of the credit assignment problem. The agent's learning signal consists solely of a terminal reward (+1.0 or -1.0) at the end of an episode.
+### 3. Experiment: Complex Deterministic Policy (Forced Honesty)
 
-Our hypothesis is that this **sparse reward signal** is insufficient to guide the agent through the vast, low-quality action space during exploration. When epsilon is high, the agent fills its replay buffer with millions of transitions generated by terrible random actions, all of which are associated with a delayed, final reward of -1.0. The network learns that virtually all actions lead to a loss, causing the Q-values to converge to similar negative values and preventing the emergence of a coherent policy.
+-   **Hypothesis:** We've proven the agent fails in stochastic environments. Can it learn a *complex* but *deterministic* policy?
+-   **Objective:** Force the agent to learn to "only tell the truth."
+-   **Methodology:**
+    -   **New Bot:** Created a `challenger_bot` (or `always_doubt_bot`) which always tells the truth and **always doubts the agent**.
+    -   **New Reward Shaping:**
+        -   Positive reward for telling the truth.
+        -   High penalty for lying (which is always caught by the bot).
+        -   Penalty for `PASS` (to prevent inaction).
+    -   **Environment:** Agent vs. `challenger_bot`. The only path to victory is to tell the truth on every single turn.
+-   **Results:**
+    -   Training was extended to 150,000 episodes.
+    -   The learning curve was incredibly slow, proving the policy's complexity.
+    -   **First victory achieved at episode 130,000.**
+    -   Reached a **20% win rate** by episode 150,000, showing a clear, though difficult, learning trend.
+    -   *Note: This checkpoint was subsequently lost due to a bug, preventing further training.*
+-   **Analysis:** This was a critical success. It proved two things:
+    1.  The agent *can* learn highly complex policies.
+    2.  Learning complex policies requires a *massive* number of episodes.
 
-### 4. Proposed Solution: Reward Shaping
+### 4. Phase 3 Conclusions & Next Steps
 
-To combat the sparse reward problem, we will introduce 2 rewards that will give the agent a feedback if it was a good or a bad result. This technique, known as **Reward Shaping**, provides a denser, more immediate feedback signal to guide the agent's learning process.
-
-The following reward structure will be implemented in `environment.py`:
-
-* **+0.05** when the agent makes someone buy cards.
-* **-0.05** when the agent buy cards from the pile.
-
-The terminal rewards of +1.0 for a win and -1.0 for a loss will remain, ensuring the primary objective is still optimized.
-
-### 5. Expected Outcome
-
-By providing more frequent feedback, the agent should be able to more effectively solve the credit assignment problem. It will learn the value of micro-actions (like making good challenges) even if it doesn't win the episode. This is expected to stabilize the training process, reduce the variance between runs, and allow the agent to consistently learn effective policies, even with prolonged exploration phases.
+-   **Final Diagnosis:** The **DQN algorithm** is the bottleneck, not the agent's architecture. DQN is fundamentally ill-equipped to handle the high-stochasticity, high-variance environment of "Cheat" when played against probabilistic opponents. It excels *only* in deterministic (or near-deterministic) scenarios, as proven by Test B and Test C.
+-   **Next Steps:**
+    -   [x] Conclude experimentation with DQN.
+    -   [ ] **Implement PPO (Proximal Policy Optimization).** PPO is a policy-gradient algorithm well-suited for stochastic environments and is the next logical step to solving the core problem identified in this phase. We are optimistic that PPO will yield better results in the original, stochastic environment.

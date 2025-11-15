@@ -10,7 +10,7 @@ import os
 import csv
 import argparse
 from cheat_env.environment import CheatEnviroment
-from agents.bots import bot_strategy_80_20, bot_strategy_one_third, bot_100_0, bot_strategy_60_40
+from agents.bots import bot_strategy_80_20, bot_strategy_one_third, bot_100_0, bot_strategy_60_40, bot_strategy_challenger
 from agents.rl_agent import RLAgent
 
 def main():
@@ -25,18 +25,19 @@ def main():
     # --- 1. TRAINING AND LOGGING SETUP ---
     player_names = ["RL_Agent", "Bot_1", "Bot_2"]
     max_turns = 250
-    num_episodes = 100000
+    num_episodes = 1
     BATCH_SIZE = 128
     LOG_INTERVAL = 500
     CHECKPOINT_INTERVAL = 500
-    VISUALIZE_GAMES = False
+    VISUALIZE_GAMES = True
 
     # --- Bot Strategy Pool and Naming ---
     bot_pool = {
         bot_strategy_80_20: 'Bot 80/20',
         bot_strategy_one_third: 'Bot 1/3',
         bot_100_0: 'Bot Honest',
-        bot_strategy_60_40: 'Bot 60/40'
+        bot_strategy_60_40: 'Bot 60/40',
+        bot_strategy_challenger: 'Bot Challenger'
     }
     
     # --- Data Logging Setup ---
@@ -99,6 +100,10 @@ def main():
         interval_games_played['RL_Agent'] += 1
         interval_games_played[bot_pool[opponent_1_strategy_func]] += 1
         interval_games_played[bot_pool[opponent_2_strategy_func]] += 1
+
+        if VISUALIZE_GAMES:
+            print(f"bot 1: {bot_pool[opponent_1_strategy_func]}, bot 2: {bot_pool[opponent_2_strategy_func]}")
+            print(f"--- Episode {episode+1} ---")
         
         # --- Game Loop (Single Episode) ---
         while not terminated and not truncated:
@@ -106,12 +111,33 @@ def main():
             state = env._get_state()
             action = None
 
+            if VISUALIZE_GAMES:
+                print("-" * 30)
+                print(f"Turn: {env.turn_count} | Player's Turn: {current_player.name}")
+                
+                for p in env.players:
+                    # Create a frequency vector for the player's hand
+                    hand_vector = [0] * 14
+                    for card in p.hand:
+                        if card.value in value_to_index:
+                            hand_vector[value_to_index[card.value]] += 1
+                    
+                    print(f"  - {p.name}: {len(p.hand)} cards -> Frequencies: {hand_vector}")
+                
+
+
+                print(f"Rank to Play: '{env.current_rank_to_play}' | Cards in Pile: {len(env.round_discard_pile)}")
+
             if current_player.name == "RL_Agent":
                 action = agent.choose_action(env._get_state(), env.get_valid_actions())
             elif current_player.name == "Bot_1":
                 action = opponent_1_strategy_func(current_player, env.current_rank_to_play, env.last_number_of_cards_played)
             elif current_player.name == "Bot_2":
                 action = opponent_2_strategy_func(current_player, env.current_rank_to_play, env.last_number_of_cards_played)
+
+            if VISUALIZE_GAMES:
+                action_type, cards, rank = action
+                print(f"Action chosen by {current_player.name}: Type={action_type}, Cards={cards}, Rank='{rank}'")
 
             next_state, reward, terminated, truncated, info = env.step(action)
 
@@ -122,6 +148,12 @@ def main():
 
         # --- End of Episode: Record Winner ---
         if terminated:
+
+            if VISUALIZE_GAMES:
+                print(f"GAME OVER! The winner is: {env.winner.name}")
+                print("=" * 30)
+                print("\n")
+
             winner_name = env.winner.name
             if winner_name == "RL_Agent":
                 interval_win_counts['RL_Agent'] += 1
