@@ -218,7 +218,7 @@ def bot_strategy_one_third(player, current_rank, last_number_of_cards_played):
                 return (2, play_cards, new_announced_rank)
 
 
-def bot_100_0(player, current_rank, last_number_of_cards_played):
+def bot_strategy_100_0(player, current_rank, last_number_of_cards_played):
     """
     Implements a completely honest bot.
 
@@ -374,7 +374,7 @@ def bot_strategy_60_40(player, current_rank, last_number_of_cards_played):
 
 def bot_strategy_challenger(player, current_rank, last_number_of_cards_played):
     """
-    Implements a completely honest
+    Implements a challenger and honest bot
 
     This bot **never lies**. But if the other player plays, it will always challenge.
     """
