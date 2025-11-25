@@ -1,4 +1,3 @@
-# ppo_cheat.py
 """
 This script executes the Proximal Policy Optimization (PPO) training loop for the 
 Cheat RL agent.
@@ -254,14 +253,18 @@ if __name__ == "__main__":
                 print(f"global_step={global_step}, episodic_return={current_episode_return}")
                 writer.add_scalar("charts/episodic_return", current_episode_return, global_step)
 
-                # Log the 'clean' win rate (without reward shaping noise)
+                # Log the 'clean' win rate for the agent
                 if "is_win" in info:
-                    writer.add_scalar("charts/is_win", info.get("is_win", 0.0), global_step)
+                    writer.add_scalar("charts/win_rate/RL_Agent", info.get("is_win", 0.0), global_step)
+                
+                if "winner_name" in info:
+                    winner = info["winner_name"]
+                    if winner != "RL_Agent":
+                        writer.add_scalar(f"charts/win_rate_opponent/{winner}", 1, global_step)
                 
                 current_episode_return = 0.0
                 next_obs = envs.reset()
                 next_obs = torch.Tensor(next_obs).to(device).unsqueeze(0)
-                next_done = torch.zeros(args.num_envs).to(device)
 
         # --- B. Advantage Estimation (GAE) ---
         with torch.no_grad():

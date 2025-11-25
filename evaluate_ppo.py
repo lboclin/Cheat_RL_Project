@@ -29,9 +29,8 @@ def evaluate_agent(model_path: str):
         visualize=True 
     )
     
-    # Retrieve state dimension for network initialization.
-    temp_state = env.reset()
-    state_size = len(temp_state)
+    state = env.reset() 
+    state_size = len(state)
     
     # Automatically detect available device (CUDA or CPU).
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -57,7 +56,6 @@ def evaluate_agent(model_path: str):
     print("\n--- STARTING EVALUATION EPISODE ---")
 
     # --- 3. Evaluation Loop ---
-    state = env.reset()
     terminated = False
     truncated = False
 
@@ -76,6 +74,7 @@ def evaluate_agent(model_path: str):
             )
         
         # Execute the action in the environment.
+        # 'state' é atualizado aqui para o próximo loop
         state, reward, terminated, truncated, info = env.step(full_action)
         
         # Pause briefly to allow the user to read the console output.

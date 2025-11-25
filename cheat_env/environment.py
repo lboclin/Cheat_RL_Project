@@ -310,8 +310,15 @@ class CheatEnviroment:
                 reward = self.REWARD_LOSE
                 info["is_win"] = 0.0
             
+            if self.winner == self.rl_agent:
+                winner_name = "RL_Agent"
+            else:
+                winner_name = self.bot_strategy_names[self.winner.name]
+            
+            info["winner_name"] = winner_name
+            
             if self.VISUALIZE_GAMES:
-                print(f"GAME OVER! The winner is: {self.winner.name}")
+                print(f"GAME OVER! The winner is: {self.winner.name} ({winner_name})")
                 print("=" * 30 + "\n")
         
         elif truncated:
@@ -320,7 +327,7 @@ class CheatEnviroment:
         if not terminated:
             # Determine next player
             if self.pass_counter >= (len(self.players)-1):
-                self._start_new_round(self.last_player_who_played_index)
+                self._start_new_round(self.last_player_who_played_index, clear_pile=False)
             elif round_ended_by_challenge:
                 pass
             else:
@@ -372,11 +379,13 @@ class CheatEnviroment:
         return state, agent_reward, terminated, truncated, info
 
 
-    def _start_new_round (self, starting_player_index: int):
+    def _start_new_round (self, starting_player_index: int, clear_pile: bool = True):
         """
         Resets round-specific variables to start a fresh round of play.
+        If clear_pile is False, the discard pile is kept (used when everyone passes).
         """
-        self.round_discard_pile = []
+        if clear_pile:
+            self.round_discard_pile = []
         self.last_number_of_cards_played = None
         self.last_player_who_played_index = None
         self.current_rank_to_play = "Open"
