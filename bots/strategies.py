@@ -8,7 +8,6 @@ a diverse and challenging training environment.
 import random
 
 def suspect_play(player, current_rank, last_number_of_cards_played):
-    """
     if current_rank == "Open":
         return False
     
@@ -20,7 +19,6 @@ def suspect_play(player, current_rank, last_number_of_cards_played):
 
     if total_known_cards_of_rank > 4:
         return True
-    """
     return False
 
 
@@ -62,11 +60,15 @@ def bot_strategy_80_20(player, current_rank, last_number_of_cards_played):
                     return (0, [], current_rank)
         else:
             if len(fake_cards) == 1:
+                if len(player.hand) == 1:
+                    return (1, [], current_rank)
                 return (2, fake_cards, current_rank)
             else:
                 if random.randint(1, 2) == 1:
                     return (2, [fake_cards[0]], current_rank)
                 else:
+                    if len(player.hand) <= 2:
+                        return (1, [], current_rank)
                     return (2, [fake_cards[0], fake_cards[1]], current_rank)
     else:
         hand_values_no_jokers = [card.value for card in player.hand if card.value != "Joker"]
@@ -157,11 +159,15 @@ def bot_strategy_one_third(player, current_rank, last_number_of_cards_played):
                     return (0, [], current_rank)
         elif decide_action == 2:
             if len(fake_cards) == 1:
+                if len(player.hand) == 1:
+                    return (1, [], current_rank)
                 return (2, fake_cards, current_rank)
             else:
                 if random.randint(1, 2) == 1:
                     return (2, [fake_cards[0]], current_rank)
                 else:
+                    if len(player.hand) <= 2:
+                        return (1, [], current_rank)
                     return (2, [fake_cards[0], fake_cards[1]], current_rank)
         elif decide_action == 3:
             return (0, [], current_rank)
@@ -313,11 +319,15 @@ def bot_strategy_60_40(player, current_rank, last_number_of_cards_played):
                     return (0, [], current_rank)
         else:
             if len(fake_cards) == 1:
+                if len(player.hand) == 1:
+                    return (1, [], current_rank)
                 return (2, fake_cards, current_rank)
             else:
                 if random.randint(1, 2) == 1:
                     return (2, [fake_cards[0]], current_rank)
                 else:
+                    if len(player.hand) <= 2:
+                        return (1, [], current_rank)
                     return (2, [fake_cards[0], fake_cards[1]], current_rank)
     else:
         hand_values_no_jokers = [card.value for card in player.hand if card.value != "Joker"]
