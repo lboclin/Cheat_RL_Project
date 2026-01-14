@@ -1,0 +1,3 @@
+all models developed the same strategy extremelly fast. In about 25000 timestaps all models started winnning all the matches. The performance was a way better compared to DQN,
+because all the 3 models got 100% of winrate and the trainment much faster, maybe 20x faster than the DQN test, and the DQN test did not got 100% of winrate. The best result was 95% in
+one of the models.

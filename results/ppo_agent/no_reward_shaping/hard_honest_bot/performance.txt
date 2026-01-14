@@ -1,0 +1,5 @@
+As the easy_honest_bot test, all the 3 models got 100% of winrate in just a few timestaps of trainment. In about 35000 timestaps it got 100% without using reward shaping.
+Comparing with the DQN performance there is a big gap of sample efficiency and performance in general. The DQN could not reach 100% winrate even using reward shaping to "teach"
+the agent, futhermore, the agent with DQN could win 1 match against this hard mode honest bot.
+The models did not reached the most efficiency, maybe because of the number of timestaps or because the reward shaping only incentivates the agent to win, and not to win fast,
+but all models got 100% of winrate so the mission was concluded.

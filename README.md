@@ -3,108 +3,83 @@
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)
 
-A project focused on developing a Reinforcement Learning agent capable of mastering the card game "Cheat" (also known as "I Doubt It" or "Bluff"). The ultimate goal is to research and train an agent that can play at a superhuman level.
+This project is dedicated to the development of a Reinforcement Learning (RL) agent capable of mastering the card game "Cheat" (also known as "Bluff" or "I Doubt It"). The ultimate objective of this research is to train a model that achieves **superhuman proficiency**, outperforming the decision-making and bluffing strategies of even highly experienced human players.
 
-The entire game environment was built from scratch in Python to provide full control over the rules, state representation, and reward mechanisms for training and experimentation.
+To reach this level of mastery, the project follows a rigorous experimental methodology. It begins with an exhaustive comparison of different architectures—**Deep Q-Network (DQN)** and **Proximal Policy Optimization (PPO)**—evaluated against a pool of rule-based bots that simulate various human playing styles. Following this comparative analysis, the superior algorithm is selected for a **Self-Play** curriculum, where the agent evolves its strategies by competing against increasingly advanced versions of itself.
+
+The entire game environment was built from scratch in Python to provide absolute control over the rules, state representation, and reward mechanisms, ensuring a robust framework for scientific experimentation.
 
 ---
 
 ## 📖 Game Rules
 
-The specific rules implemented in this environment are detailed in a separate file. For a complete understanding of the game logic, please refer to [**RULES.md**](RULES.md).
+The game logic adheres to the standard "Cheat" mechanics, including complex interactions such as initiating rounds, doubting bluffs, and strategic passing. For a comprehensive breakdown of the implemented logic, please refer to [**RULES.md**](RULES.md).
 
 ---
 
 ## 🛠️ Built With
 
-This project leverages the following technologies and libraries:
-
-* **Python 3:** The core programming language.
-* **PyTorch:** The primary deep learning framework for the neural networks.
-* **NumPy:** For efficient numerical operations, especially in state representation.
-* **Pandas & Matplotlib:** Used for analyzing and plotting the training results.
+* **Python 3.9+**: The core language for environment and agent logic.
+* **PyTorch**: The primary framework for implementing deep neural networks (Multi-Head Actor-Critic).
+* **NumPy**: Used for efficient numerical operations and state vector representations.
+* **Pandas & Matplotlib**: Employed for data analysis and visualization of training metrics.
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these steps to set up the project locally.
-
-### Prerequisites
-
-* Python 3.9 or higher.
-* `pip` and `venv` modules (usually included with Python).
+Follow these steps to set up the environment and begin experimentation.
 
 ### Installation
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/your_username/Cheat-RL-Project.git](https://github.com/lboclin/Cheat_RL_Project.git)
+    git clone [https://github.com/lboclin/Cheat_RL_Project.git](https://github.com/lboclin/Cheat_RL_Project.git)
     ```
 
-2.  **Navigate to the project directory:**
+2.  **Navigate to the directory and set up a virtual environment:**
     ```sh
     cd Cheat-RL-Project
-    ```
-
-3.  **Create a virtual environment:**
-    ```sh
-    # On macOS/Linux
-    python3 -m venv venv
-
-    # On Windows
     python -m venv venv
-    ```
-
-4.  **Activate the virtual environment:**
-    ```sh
-    # On macOS/Linux
-    source venv/bin/activate
-
-    # On Windows (PowerShell)
+    # On Windows:
     .\venv\Scripts\activate
+    # On macOS/Linux:
+    source venv/bin/activate
     ```
 
-5.  **Install the required dependencies:**
+3.  **Install dependencies:**
     ```sh
     pip install -r requirements.txt
     ```
 
 ---
 
-## 📈 Usage
+## 📊 Methodology & Research Findings
 
-Once the setup is complete, you can run the main scripts from the root of the project directory.
+### Algorithmic Benchmarking: DQN vs. PPO
+A core phase of this research involved a head-to-head comparison between DQN and PPO to determine which architecture better navigates the high-dimensional action space of "Cheat".
 
-* **To start the training process:**
-    ```sh
-    python main.py
-    ```
-    Training progress (model checkpoints) is saved to `training_checkpoint.pth`, and performance metrics are logged in `win_rate_log.csv`.
+* **Performance Metrics**: PPO demonstrated a staggering improvement in sample efficiency, training approximately **20x faster** than DQN in standardized scenarios.
+* **Convergence**: PPO successfully achieved a **100% win rate** against honest bot strategies within 35,000 timesteps—a milestone the DQN agent failed to consolidate consistently.
+* **The Challenger Paradox**: Interestingly, experiments against the aggressive "Challenger Bot" revealed that while PPO is faster, its Multi-Head architecture is highly sensitive to extreme punishment. DQN showed higher resilience in specific deterministic scenarios, leading to the decision to refine PPO through Self-Play to overcome these local optima.
 
-* **To plot the training results:**
-    ```sh
-    python plot_results.py
-    ```
-    This will generate a `win_rate_evolution.png` file and display the chart.
+### Baseline Training (DQN Blind)
+Initial experiments utilized a "blind" DQN agent (with the strategic card-selection head disabled). This ablation study established a baseline win rate of **25.8%**, proving the agent could learn the core mechanics—doubting and passing—even before mastering the art of the sophisticated bluff.
+
+![Win rate evolution](results/dqn_blind_agent/run_2/win_rate_evolution.png)
 
 ---
 
-## 📊 Preliminary Results
+## 🗺️ Research Roadmap
 
-This experimental phase aimed to establish a performance baseline for a Deep Q-Network (DQN) agent in the game of "Cheat". The agent was developed with a "blind" architecture, wherein the neural network head responsible for strategic card selection was disabled. This ablation study forces the agent to learn the game's core mechanics—when to challenge, pass, or play, and what rank/quantity to announce—without the ability to choose which specific cards to use in a bluff. The agent was trained against a pool of four distinct rule-based opponents over 50,000 episodes. To analyze the impact of the exploration-exploitation trade-off, the `epsilon_decay` hyperparameter was varied across three primary training regimes. The results demonstrate that a prolonged exploration phase is critical for this problem, with the best-performing agent achieving a peak win rate of **25.8%**.
+The project is structured into six progressive phases:
 
-![Win rate evolution of all players](results/dqn_blind_agent/run_2/win_rate_evolution.png)
-![RL Agent performance zoomed - Best Performance](results/dqn_blind_agent/run_2/rl_agent_performance_zoom.png)
----
+- [x] **Phase 1**: Establish a performance baseline using a DQN agent with the `rank_selection` head disabled (a "blind" agent).
+- [x] **Phase 2**: Enable and train the fourth network head (`rank_selection`) to allow for strategic bluffing.
+- [x] **Phase 3**: Implement and train a PPO (Proximal Policy Optimization) agent using a Multi-Head Actor-Critic architecture.
+- [x] **Phase 4**: Conduct a comparative analysis of the performance between DQN and PPO agents across stochastic and deterministic environments.
+- [ ] **Phase 5**: Implement an interface for humans to play against the AI models.
+- [ ] **Phase 6**: Implement **Self-Play** using the PPO algorithm to evolve strategies beyond the limitations of fixed rule-based bots.
+- [ ] **Phase 7**: Conduct final **Human vs. AI testing** to verify if the Self-Play agent has achieved superhuman mastery of the game.
 
-## 🗺️ Roadmap
-
-The current research plan is structured as follows:
-
--   [x] Establish a performance baseline using a DQN agent with the `rank_selection` head disabled (a "blind" agent).
--   [x] Enable and train the fourth network head (`rank_selection`) to allow for strategic bluffing.
--   [ ] Implement and train a PPO (Proximal Policy Optimization) agent.
--   [ ] Conduct a comparative analysis of the performance between the DQN and PPO agents.
-
-See the `RESEARCH_LOG.md` for detailed notes on each experimental phase.
+For detailed logs and technical deep-dives into each phase, see [**RESEARCH_LOG.md**](RESEARCH_LOG.md).

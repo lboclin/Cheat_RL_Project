@@ -1,0 +1,6 @@
+todos os modelos treinados com reward shaping tiveram um comportamento parecido. Basicamente, nenhum deles aprendeu genuinamente a falar a verdade repetidas vezes até alcançar
+a vitória. Pode ter sido pelo aumento da complexidade de escolha das cartas na implementação do ppo, mas basicamente os modelos apenas aprenderam a acumular cartas durante a
+partida e de vez em quando jogar verdades (que pareciam ser meio na sorte) para que o bot challenger comesse um pouco de cartas e não ganhasse o jogo na hora. A estratégia que o 
+agente aprendeu com reward_shaping foi bem parecida com a estratégia que ele aprendeu sem. Em 7 treinamentos explorando 3 diferentes tipos de reward_shaping, o modelo não obteve
+nenhuma vitória. Além disso, ao analisar as partidas que os modelos jogarem, ficou visível que o modelo não estava nem perto de ganhar, totalmente dos modelos treinados com DQN
+que mesmo que não atingissem a vitória com "poucos" timestaps, estavam caminhando para vitória e aprendendo a falar mais verdades para cada situação.

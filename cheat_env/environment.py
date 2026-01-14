@@ -78,12 +78,12 @@ class CheatEnviroment:
         
         # Apply values if reward shaping is enabled
         if self.reward_shaping:
-            self.SHAPING_AGENT_CHALLENGE_SUCCESS = 0.1
-            self.SHAPING_AGENT_CHALLENGE_FAIL = -0.1
-            self.SHAPING_OPPONENT_CAUGHT_AGENT_LIE = -0.1
-            self.SHAPING_OPPONENT_FAILED_CHALLENGE = 0.1
-            self.SHAPING_AGENT_PASS = -0.01
-            self.SHAPING_AGENT_FINAL_LIE_PENALTY = -0.1
+            self.SHAPING_AGENT_CHALLENGE_SUCCESS = 0.0
+            self.SHAPING_AGENT_CHALLENGE_FAIL = -0.5
+            self.SHAPING_OPPONENT_CAUGHT_AGENT_LIE = 0.0
+            self.SHAPING_OPPONENT_FAILED_CHALLENGE = 0.0
+            self.SHAPING_AGENT_PASS = -0.05
+            self.SHAPING_AGENT_FINAL_LIE_PENALTY = -0.2
             
 
         # --- Bot Configuration ---
@@ -92,6 +92,7 @@ class CheatEnviroment:
             bot_strategy_one_third: 'Bot 1/3',
             bot_strategy_100_0: 'Bot Honest',
             bot_strategy_60_40: 'Bot 60/40'
+            #bot_strategy_challenger: 'Bot Challenger'
         }
         self.bot_pool_funcs = list(self.bot_pool_dict.keys())
         
@@ -101,7 +102,8 @@ class CheatEnviroment:
         for player in self.players[1:]:
             self.bot_strategies[player.name] = random.choice(self.bot_pool_funcs)
             self.bot_strategy_names[player.name] = "None (reset)"
-            
+
+
 
     def _get_state(self):
         """
@@ -455,32 +457,26 @@ class CheatEnviroment:
         return 0.0
 
     def _play_cards(self, current_player_index, cards_to_play, announced_rank):
-        """
-        Handles the logic for a 'Play' action.
-
-        Updates the player's hand, the discard pile, and checks for game end conditions.
-        """
         current_player = self.players[current_player_index]
-        
         if not cards_to_play:
             return self._handle_pass(current_player_index)
 
         self.current_rank_to_play = announced_rank
-        for card in cards_to_play:
+        
+        for card in list(cards_to_play): 
             if card in current_player.hand:
                 current_player.hand.remove(card)
                 self.round_discard_pile.append(card)
             elif self.VISUALIZE_GAMES:
-                print(f"** BUG ALERT (Bot): {current_player.name} tried to play {card} but did not have it! **")
+                print(f"** BUG ALERT: {current_player.name} tried to play {card} but did not have it! **")
 
+        reward = 0.0
         self.last_player_who_played_index = current_player_index
         self.last_number_of_cards_played = len(cards_to_play)
         self.pass_counter = 0
         self.starter_player_index = None
-        reward = 0.0
 
-        # If player emptied hand, verify the last play immediately
-        if (len(current_player.hand) == 0) :
+        if (len(current_player.hand) == 0):
             reward = self._last_play_judge(current_player_index, cards_to_play)
         
         return reward

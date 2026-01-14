@@ -1,0 +1,30 @@
+OBS: os modelos tiveram poucos empates no evaluate_models, mas praticamente todas as partidas que eu vi durante o treinamento (ou seja, a output durante o treinamento) eram empates
+Isso é esquisito pois teoricamente não era pro agente ter piorado durante o treinamento, um empate é melhor que uma derrota.
+
+modelo 1-
+O primeiro modelo teve um comportamento muito diferente de tudo que eu já vi. Basicamente ele aprendeu a controlar o jogo mas ao invés de buscar a vitória ele busca o empate.
+O que ele tenta fazer é acumular o máximo de cartas possível e depois ele fica controlando o jogo do bot challenger, quando o bot está com pouca carta, o agente fala uma verdade
+para aumentar o numero de cartas do bot, e quando o bot está com mais cartas (8 cartas) ele fala mentiras para o bot pegar e se dar bem.
+Eu acho que o que está por trás de tudo isso é a complexidade do agente olhar para o estado e entender o que é verdade e o que é mentira. Quando ele tem poucas cartas na mão,
+essa relação fica mais complexa, já que ele tem que jogar uma carta da sua mão e falar uma carta de 1 a 13, e precisa acertar isso. O que ele fez para solucionar essa complexidade
+foi basicamente pegar todas as cartas pra ele, tornando mais fácil acertar uma verdade.
+O problema é que ele ficou preso nessa estratégia e não conseguiu nenhuma vitória, por isso, pensando como se o agente fosse um humano, se ele não sabia que existia recompensa 1,
+o máximo para ele era recompensa 0, e ele otimizou sua estratégia para atingir resultado 0.
+
+modelo 2-
+O segundo modelo tentou fazer algo parecido com o modelo 1. Basicamente, o começo do jogo inteiro é só ele passando, o que favorece 100% o bot 2 (honesto) pois o challenger joga
+verdade, o honesto também, o agente passa e o challenger duvida da verdade do honesto. Esse ciclo se mantém até que o bot honesto fique com poucas cartas, que normalmente são
+cartas únicas, ou seja, ele tem uma de cada, já que os bots são programados a jogar cartas com maior quantidade primeiro. É nessa hora que o agente muda a estratégia, ele para
+de passar e começa jogar mentiras para que o challenger duvide e inicie a rodada, ou seja, ele está ajudando o challenger que no momento é o jogador com mais cartas na mesa.
+O que ele faz até o final do jogo agora é jogar mentiras até o challenger ficar com poucas cartas e depois tentar jogar verdades para o challenger comprar cartas. Enquanto isso,
+o bot honesto não joga nada pois possui cartas pouco comuns. Porém, chega uma hora que as cartas pouco comuns do bot honesto são jogadas pelo challenger (que também está com poucas cartas)
+e finalmente, um dos 2 ganha.
+
+modelo 3-
+seguiu uma estratégia praticamente igual a do modelo 2. Entretanto, é um modelo que prolongou mais a estratégia do pass, deixando acumular mais cartas na pilha de descarte.
+
+modelo 4 e 5 -
+seguiram as mesmas estratégias dos outros modelos mesmo tendo sido treinados com 5 milhões de timestaps.
+
+Provavelmente a complexidade do ambiente, no caso de conseguir identificar o que é verdade e o que é mentira é o que impossibilita os modelos de alcançar uma vitória.
+Com o uso de reward shaping, será mais fácil de guiar o agente e fazer com que ele chegue na estratégia correta para vencer.
