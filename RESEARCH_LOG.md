@@ -46,5 +46,5 @@ A critical finding of this phase is that **DQN successfully defeated the Challen
 -   **Exploration:** DQN's $\epsilon$-greedy exploration forced it to keep trying actions until it identified the high value of truthful play, whereas PPO's entropy-based exploration was insufficient to overcome the immediate negative reinforcement of the Challenger bot.
 
 ### 5. Next Steps
--   [ ] **Self-Play Implementation:** Transition to a Self-Play curriculum to allow the Multi-Head architecture to align its decision heads against evolving opponents rather than a static "Xeriff" bot.
--   [ ] **Victory-Centric Reward Scaling:** Adjust reward weights to ensure game victory (+10.0) significantly outweighs intermediate survival rewards to prevent reward hacking.
+- [ ] **Human-AI Interface Development:** Design and implement a graphical user interface (GUI) to facilitate direct interaction between human players and trained models, enabling empirical validation of agent behavior.
+- [ ] **Self-Play Curriculum for Superhuman Mastery:** Leverage PPO’s demonstrated superiority in stochastic environments to transition into a Self-Play framework. By allowing the agent to compete against increasingly advanced versions of itself, the objective is to evolve complex bluffing dynamics and achieve superhuman-level strategic proficiency.
