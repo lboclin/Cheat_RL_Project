@@ -2,6 +2,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)
+![Flet](https://img.shields.io/badge/UI-Flet-blueviolet.svg)
 
 This project is dedicated to the development of a Reinforcement Learning (RL) agent capable of mastering the card game "Cheat" (also known as "Bluff" or "I Doubt It"). The ultimate objective of this research is to train a model that achieves **superhuman proficiency**, outperforming the decision-making and bluffing strategies of even highly experienced human players.
 
@@ -52,7 +53,16 @@ Follow these steps to set up the environment and begin experimentation.
     pip install -r requirements.txt
     ```
 
----
+## 🎮 Play Against the AI (GUI)
+
+A modern graphical user interface has been developed using **Flet**, allowing humans to play directly against the trained PPO models. This interface provides a visual representation of the table, your hand, and a real-time narrative of the game's progress.
+
+![Cheat RL Game Interface](frontend\game_interface.png)
+
+**To launch the game interface:**
+```sh
+python frontend/main.py
+```
 
 ## 📊 Methodology & Research Findings
 
@@ -66,7 +76,7 @@ A core phase of this research involved a head-to-head comparison between DQN and
 ### Baseline Training (DQN Blind)
 Initial experiments utilized a "blind" DQN agent (with the strategic card-selection head disabled). This ablation study established a baseline win rate of **25.8%**, proving the agent could learn the core mechanics—doubting and passing—even before mastering the art of the sophisticated bluff.
 
-![Win rate evolution](results/dqn_blind_agent/run_2/win_rate_evolution.png)
+![Win rate evolution](results\dqn_blind_agent\run_2\win_rate_evolution.png)
 
 ---
 
